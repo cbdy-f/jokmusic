@@ -1,0 +1,218 @@
+<template>
+  <div class="playlist-container">
+    <div class="top-wrap">
+      <div class="img-wrap">
+        <!-- 封面 -->
+        <img :src="playlist.coverImgUrl" alt="" />
+      </div>
+      <div class="info-wrap">
+        <!-- 名字 -->
+        <p class="title">{{ playlist.name }}</p>
+        <div class="author-wrap">
+          <!-- 头像 -->
+          <img class="avatar" :src="playlist.creator.avatarUrl" alt="" />
+          <span class="name">{{ playlist.creator.nickname }}/</span>
+          <span class="time">{{ playlist.createTime }} 创建</span>
+        </div>
+        <div class="play-wrap">
+          <span class="iconfont icon-circle-play"></span>
+          <span class="text">播放全部</span>
+        </div>
+        <div class="tag-wrap">
+          <span class="title">标签:</span>
+          <!-- 分类标签 -->
+          <ul>
+            <li v-for="(item, index) in playlist.tags" :key="index">
+              {{ item }}
+            </li>
+          </ul>
+        </div>
+        <div class="desc-wrap">
+          <span class="title">简介:</span>
+          <!-- 简介 -->
+          <span class="desc">
+            {{ playlist.description }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <el-tabs v-model="activeIndex">
+      <el-tab-pane label="歌曲列表" name="1">
+        <table class="el-table playlit-table">
+          <thead>
+            <th></th>
+            <th></th>
+            <th>音乐标题</th>
+            <th>歌手</th>
+            <th>专辑</th>
+            <th>时长</th>
+          </thead>
+          <tbody>
+            <tr class="el-table__row">
+              <td>1</td>
+              <td>
+                <div class="img-wrap">
+                  <img src="../assets/songCover.jpg" alt="" />
+                  <span class="iconfont icon-play"></span>
+                </div>
+              </td>
+              <td>
+                <div class="song-wrap">
+                  <div class="name-wrap">
+                    <span>你要相信这不是最后一天</span>
+                    <span class="iconfont icon-mv"></span>
+                  </div>
+                  <span>电视剧加油练习生插曲</span>
+                </div>
+              </td>
+              <td>华晨宇</td>
+              <td>你要相信这不是最后一天</td>
+              <td>06:03</td>
+            </tr>
+            <tr class="el-table__row">
+              <td>2</td>
+              <td>
+                <div class="img-wrap">
+                  <img src="../assets/songCover.jpg" alt="" />
+                  <span class="iconfont icon-play"></span>
+                </div>
+              </td>
+              <td>
+                <div class="song-wrap">
+                  <div class="name-wrap">
+                    <span>你要相信这不是最后一天</span>
+                    <span class="iconfont icon-mv"></span>
+                  </div>
+                </div>
+              </td>
+              <td>华晨宇</td>
+              <td>你要相信这不是最后一天</td>
+              <td>06:03</td>
+            </tr>
+          </tbody>
+        </table>
+      </el-tab-pane>
+      <el-tab-pane label="评论(66)" name="2">
+        <!-- 精彩评论 -->
+        <div class="comment-wrap">
+          <p class="title">
+            精彩评论
+            <span class="number">({{ hotCount }})</span>
+          </p>
+          <div class="comments-wrap">
+            <!-- 评论 -->
+            <div v-for="(item, index) in hotComment" :key="index" class="item">
+              <div class="icon-wrap">
+                <!-- 头像 -->
+                <img :src="item.user.avatarUrl" alt="" />
+              </div>
+              <div class="content-wrap">
+                <div class="content">
+                  <!-- 昵称 -->
+                  <span class="name">{{ item.user.nickname }}:</span>
+                  <span class="comment">{{ item.content }}</span>
+                </div>
+                <!-- 评论的回复 -->
+                <div class="re-content" v-if="item.beReplied.length != 0">
+                  <span class="name"
+                    >{{ item.beReplied[0].user.nickname }}：</span
+                  >
+                  <span class="comment">{{ item.beReplied[0].content }}</span>
+                </div>
+                <div class="date">2020-02-12 17:26:11</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 最新评论 -->
+        <div class="comment-wrap">
+          <p class="title">
+            最新评论
+            <span class="number">( {{ total }} )</span>
+          </p>
+          <div class="comments-wrap">
+            <div class="item" v-for="(item, index) in comments" :key="index">
+              <div class="icon-wrap">
+                <img :src="item.user.avatarUrl" alt="" />
+              </div>
+              <div class="content-wrap">
+                <div class="content">
+                  <span class="name">{{ item.user.nickname }}：</span>
+                  <span class="comment">{{ item.content }}</span>
+                </div>
+                <div class="re-content" v-if="item.beReplied.length != 0">
+                  <span class="name"
+                    >{{ item.beReplied[0].user.nickname }}：</span
+                  >
+                  <span class="comment">{{ item.beReplied[0].content }}</span>
+                </div>
+                <div class="date">2020-02-12 17:26:11</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 分页器 -->
+        <el-pagination
+          @current-change="handleCurrentChange"
+          background
+          layout="prev, pager, next"
+          :total="total"
+          :current-page="page"
+        ></el-pagination>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+// 导入 axios
+import axios from "axios";
+import { mapActions, mapState, mapMutations } from "vuex";
+export default {
+  name: "PlayList",
+  data() {
+    return {};
+  },
+  created() {
+    this.getPlaylist(), this.getComment(), this.getNewcomment();
+  },
+  methods: {
+    ...mapMutations("playlist", ["getPlaylist", "getComment", "getNewcomment"]),
+    handleCurrentChange(val) {
+      // console.log(`当前页: ${val}`);
+      // 保存页码
+      this.page = val;
+      // 重新获取数据
+      axios({
+        url: "https://autumnfish.cn/comment/playlist",
+        method: "get",
+        params: {
+          id: this.$route.query.q,
+          limit: 10,
+          // 根据页码计算
+          offset: (this.page - 1) * 10,
+        },
+      }).then((res) => {
+        // console.log(res)
+        // 总个数
+        this.total = res.data.total;
+        // 评论数据
+        this.comments = res.data.comments;
+      });
+    },
+  },
+  computed: {
+    ...mapState("playlist", [
+      "activeIndex",
+      "total",
+      "page",
+      "playlist",
+      "hotComment",
+      "hotCount",
+      "comments",
+    ]),
+  },
+};
+</script>
+
+<style></style>

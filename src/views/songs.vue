@@ -1,0 +1,119 @@
+<template>
+  <div class="songs-container">
+    <div class="tab-bar">
+      <span class="item" @click="tag = 0" :class="{ active: tag == 0 }">
+        全部
+      </span>
+      <span class="item" @click="tag = 7" :class="{ active: tag == 7 }">
+        华语
+      </span>
+      <span class="item" @click="tag = 96" :class="{ active: tag == 96 }">
+        欧美
+      </span>
+      <span class="item" @click="tag = 8" :class="{ active: tag == 8 }">
+        日本
+      </span>
+      <span class="item" @click="tag = 16" :class="{ active: tag == 16 }">
+        韩国
+      </span>
+    </div>
+    <!-- 底部的table -->
+    <table class="el-table playlit-table">
+      <thead>
+        <th></th>
+        <th></th>
+        <th>音乐标题</th>
+        <th>歌手</th>
+        <th>专辑</th>
+        <th>时长</th>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(item, index) in currentList"
+          :key="index"
+          class="el-table__row"
+        >
+          <td>{{ index + 1 }}</td>
+          <td>
+            <div class="img-wrap">
+              <img :src="item.album.picUrl" alt="" />
+              <!-- 播放按钮 -->
+              <span
+                @click="playMusic(item.id)"
+                class="iconfont icon-play"
+              ></span>
+            </div>
+          </td>
+          <td>
+            <div class="song-wrap">
+              <div class="name-wrap">
+                <span>{{ item.name }}</span>
+                <span class="iconfont icon-mv"></span>
+              </div>
+              <span></span>
+            </div>
+          </td>
+          <td>{{ item.album.artists["0"].name }}</td>
+          <td>{{ item.album.name }}</td>
+          <td>{{ item.duration }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <el-pagination
+      :hide-on-single-page="true"
+      @size-change="sizeChange"
+      @current-change="currentPageChange"
+      :current-page="queryInfo.offset"
+      :page-sizes="[5, 10, 15, 20, 30]"
+      :page-size="queryInfo.limit"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="100"
+    >
+    </el-pagination>
+  </div>
+</template>
+
+<script>
+// 导入 axios
+import axios from "axios";
+import { mapState, mapActions, mapMutations } from "vuex";
+export default {
+  name: "SOngs",
+  data() {
+    return {};
+  },
+  watch: {
+    tag() {
+      this.queryInfo.offset = 1;
+      this.getList();
+    },
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    ...mapMutations("songs", ["currentPageChange", "sizeChange", "getList"]),
+    // 播放歌曲
+    playMusic(id) {
+      axios({
+        url: "https://autumnfish.cn/song/url",
+        method: "get",
+        params: {
+          id, // id:id
+        },
+      }).then((res) => {
+        // console.log(res)
+        let url = res.data.data[0].url;
+        // console.log(this.$parent)
+        // 直接获取父组件，可以修改任意的值
+        this.$parent.musicUrl = url;
+      });
+    },
+  },
+  computed: {
+    ...mapState("songs", ["lists", "tag", "currentList", "queryInfo"]),
+  },
+};
+</script>
+
+<style></style>
